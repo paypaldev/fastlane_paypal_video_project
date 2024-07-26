@@ -27,10 +27,10 @@ To get started with this project, follow these steps:
 1. Obtain the PayPal CLIENT ID and SECRET for your existing PayPal integration.
 2. Update the following files with your credentials:
      - .env
-     - [script.js line 25](https://github.com/raulj/fastlane_paypal_video_project/blob/main/script.js#L25)
+     - [script.js line 67](https://github.com/paypaldev/fastlane_paypal_video_project/blob/main/script.js#L67)
 3. Make sure to provide a comma separated list of domain names in the .env file, as well
-4. Update your server-side endpoint URL [script.js line 40](https://github.com/raulj/fastlane_paypal_video_project/blob/main/script.js#L40)
-5. Update the "data-client-metadata-id" especially when not in sandbox mode [script.js line 72](https://github.com/raulj/fastlane_paypal_video_project/blob/main/script.js#L72)
+4. Update your server-side endpoint URL [script.js line 40](https://github.com/paypaldev/fastlane_paypal_video_project/blob/main/script.js#L40)
+5. Update the "data-client-metadata-id" especially when not in sandbox mode [script.js line 72](https://github.com/paypaldev/fastlane_paypal_video_project/blob/main/script.js#L72)
 6. Note: To use Netlify with this project, you can leave the files as they are. However, if you're not using Netlify, you may need to restructure the directory to ensure that `api.js` is seen as the server endpoint in your Node.js project.
 
 Once you have configured your credentials, you can install the required packages by running `npm i`. To start the app, run `node index`.
