@@ -16,7 +16,7 @@
     <hr />
 </div>
 
-# Fastlane PayPal Video Project
+# Fastlane by PayPal using the PayPal Integration - Video Project Files
 
 This is the example code for the Fastlane PayPal Video Project.
 
