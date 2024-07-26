@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy Me A Croissant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="main-card">
+        <div id="card-content-left">
+            <h1>BUY ME A CROISSANT</h1>
+            <div class="emoji">🥐</div>
+            <p>Thank you for supporting me! For as low as the price of a croissant, you will allow me to continue providing great content, such as:</p>
+            <ul>
+                <li>Continuing our biweekly “Office hours” on discord. Join the community and lets help each other out!</li>
+                <li>Explore the latest trends out there and compile the information in an educational and creative way.</li>
+                <li>Continually produce better quality content as we go on this learning journey together.</li>
+            </ul>
+        </div>
+        <div id="card-content-right">
+            <form id="payment_form">
+                <input tabindex="1" type="number" id="amount" placeholder="1.00" value="5.00" min="0" step="0.01" maxlength="10">
+                <div id="badge">USD</div>
+                <div id="loading"></div>
+                <input tabindex="2" style="display:none" type="email" id="email" placeholder="Email" required>
+                <div id="watermark-container"></div>
+                <button tabindex="3" style="display:none" type="button" id="show_card_fields">Debit / Credit Card</button>
+                <div id="card_fields_container"></div>
+                <div id="paypal_button_container"></div>
+                <div id="venmo_button_container"></div>
+                <input style="display:none" id="payment_submit" type="submit" value="PAY NOW">
+            </form>
+        </div>
+        <div id="card-content-receipt" style="display: none;">
+            <h1>PAID!</h1>
+            <div class="emoji">🧾</div>
+            <p>Thank you for your purchase! Please view your details below:</p>
+            <br>
+            <p><span id="buyer_email"></span></p>
+            <table>
+                <tr>
+                    <td>Bought me a croissant!</td>
+                    <td id="amount_paid">$5.00 USD</td>
+                </tr>
+                <tr>
+                    <td>Payment Method:</td>
+                    <td id="payment_method">VISA</td>
+                </tr>
+            </table>
+        </div>        
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
