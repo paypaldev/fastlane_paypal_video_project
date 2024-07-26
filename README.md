@@ -26,7 +26,7 @@ To get started with this project, follow these steps:
 
 1. Obtain the PayPal CLIENT ID and SECRET for your existing PayPal integration.
 2. Update the following files with your credentials:
-     - .env
+     - Rename the .env-template file to .env and populate with creds [.env-template](https://github.com/paypaldev/fastlane_paypal_video_project/blob/main/.env-template)
      - [script.js line 67](https://github.com/paypaldev/fastlane_paypal_video_project/blob/main/script.js#L67)
 3. Make sure to provide a comma separated list of domain names in the .env file, as well
 4. Update your server-side endpoint URL [script.js line 40](https://github.com/paypaldev/fastlane_paypal_video_project/blob/main/script.js#L40)
