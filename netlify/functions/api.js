@@ -35,11 +35,9 @@ exports.handler = async (event) => {
 // Handle Authentication
 let handle_auth = async () => {
     try {
-        let access_token_response = await get_access_token();
-        let access_token = access_token_response.access_token;
         return {
             statusCode: 200,
-            body: JSON.stringify({ access_token })
+            body: JSON.stringify({ client_id: PAYPAL_CLIENT })
         };
     } catch (error) {
         console.error("Error in handle_auth:", error);
