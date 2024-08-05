@@ -6,7 +6,7 @@ let identity;
 let profile;
 let FastlanePaymentComponent;
 let FastlaneWatermarkComponent;
-let access_token;
+let client_token;
 let client_id;
 let script_tag;
 let paypal_button;
@@ -63,12 +63,12 @@ function get_auth() {
 }
 // Initializes the PayPal script tag with the provided access token.
 function init_paypal_script_tag(data) {
-    access_token = data.access_token;
+    client_token = data.client_token;
     client_id = "REPLACE_ME";
     // Setting script tag attributes
     script_tag = document.createElement("script");
     script_tag.src = `https://www.paypal.com/sdk/js?client-id=${client_id}&components=buttons,fastlane&enable-funding=venmo&disable-funding=card,paylater`;
-    script_tag.setAttribute("data-user-id-token", access_token);
+    script_tag.setAttribute("data-user-id-token", client_token);
     script_tag.setAttribute("data-client-metadata-id", "testing-sb-fastlane");
     document.head.appendChild(script_tag);
     script_tag.onload = init_paypal_payment_options;

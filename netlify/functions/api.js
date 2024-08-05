@@ -51,13 +51,12 @@ let handle_auth = async () => {
 // Handle Fastlane Authentication
 let handle_fastlane_auth = async () => {
     try {
-        let access_token_response = await get_access_token();
-        let access_token = access_token_response.access_token;
+        let auth = Buffer.from(`${PAYPAL_CLIENT}:${PAYPAL_SECRET}`).toString("base64");
         let fastlane_auth_response = await fetch(`${PAYPAL_API_BASE_URL}/v1/oauth2/token`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
-                "Authorization": `Bearer ${access_token}`
+                "Authorization": `Basic ${auth}`
             },
             body: new URLSearchParams({
                 grant_type: "client_credentials",
@@ -70,7 +69,7 @@ let handle_fastlane_auth = async () => {
         let fastlane_auth_response_json = await fastlane_auth_response.json();
         return {
             statusCode: 200,
-            body: JSON.stringify({ access_token: fastlane_auth_response_json.access_token })
+            body: JSON.stringify({ client_token: fastlane_auth_response_json.access_token })
         };
     } catch (error) {
         console.error("Error in handle_fastlane_auth:", error);
