@@ -85,12 +85,21 @@ let handle_card_order = async (request_body) => {
     try {
         let { amount, payment_source, single_use_token, shipping_address } = request_body;
         let create_order_response = await create_order({ amount, payment_source, single_use_token, shipping_address });
-
-        return {
-            statusCode: 200,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(create_order_response)
-        };
+        //If this was fastlane, and it was declined
+        if (create_order_response.statusCode) {
+            return {
+                statusCode: create_order_response.statusCode,
+                body: JSON.stringify(create_order_response.body)
+            };
+        }
+        // Else if this was successful
+        else {
+            return {
+                statusCode: 200,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(create_order_response)
+            };
+        }
     } catch (error) {
         console.error("Error in handle_card_order:", error);
         return {
@@ -124,11 +133,20 @@ let handle_create_order = async (request_body) => {
 let handle_complete_order = async (request_body) => {
     try {
         let capture_paypal_order_response = await capture_paypal_order(request_body.order_id);
-        return {
-            statusCode: 200,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(capture_paypal_order_response)
-        };
+        if (capture_paypal_order_response.statusCode) {
+            return {
+                statusCode: capture_paypal_order_response.statusCode,
+                body: JSON.stringify(capture_paypal_order_response.body)
+            };
+        }
+        // Else if this was successful
+        else {
+            return {
+                statusCode: 200,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(capture_paypal_order_response)
+            };
+        }
     } catch (error) {
         console.error("Error in handle_complete_order:", error);
         return {
@@ -155,31 +173,66 @@ let capture_paypal_order = async (order_id) => {
             body: "{}"
         });
         let capture_response = await capture_request.json();
-        // You always want to sanitize API responses. No need to send the full
-        // data dump to the client as to avoid unwanted data exposure
-        let sanitized_paypal_capture_response = {
-            amount: {
-                value: capture_response.purchase_units[0].payments.captures[0].amount.value,
-                currency: capture_response.purchase_units[0].payments.captures[0].amount.currency_code
-            },
-            payment_method: {}
-        };
-        // Check for PayPal details and set payment method accordingly
-        if (capture_response.payment_source.paypal) {
-            sanitized_paypal_capture_response.payment_method.type = "paypal";
-            sanitized_paypal_capture_response.payment_method.details = {
-                email: capture_response.payment_source.paypal.email_address
-            };
-        }
-        // Check for Venmo details and set payment method accordingly
-        if (capture_response.payment_source.venmo) {
-            sanitized_paypal_capture_response.payment_method.type = "venmo";
-            sanitized_paypal_capture_response.payment_method.details = {
-                email: capture_response.payment_source.venmo.email_address
-            };
-        }
         console.log("Capture Order Response:", JSON.stringify(capture_response, null, 2));
-        return sanitized_paypal_capture_response;
+        //We need to first check within the purchase units if this payment was declined or not
+        if (capture_response.purchase_units) {
+            console.log("Purchase Units are present");
+            let purchase_units = capture_response.purchase_units;
+            let transaction_detail = {};
+            // Iterate over each purchase unit "payments" object
+            for (let i = 0; i < purchase_units.length; i++) {
+                let payments = purchase_units[i].payments;
+                //The types of payment actions that we are interested in looking at to view their status
+                let payment_action_types_array = ["captures", "authorizations"];
+                // Check for either "captures" or "authorizations" in the payments
+                for (let j = 0; j < payment_action_types_array.length; j++) {
+                    let item_name = payment_action_types_array[j];
+                    let item = payments[item_name];
+        
+                    // If the item exists and has a status of "CREATED" or "CAPTURED" or "COMPLETED"
+                    if (item && item.length > 0) {
+                        console.log("Looping through payment type:", JSON.stringify(item, null, 2));
+                        let status = item[0].status;
+                        console.log("Status of payment:", status);
+                        if (status === "CREATED" || status === "CAPTURED" || status === "COMPLETED") {
+                            console.log("Payment was successful");
+                            // You always want to sanitize API responses. No need to send the full
+                            // data dump to the client as to avoid unwanted data exposure
+                            let sanitized_paypal_capture_response = {
+                                amount: {
+                                    value: capture_response.purchase_units[0].payments.captures[0].amount.value,
+                                    currency: capture_response.purchase_units[0].payments.captures[0].amount.currency_code
+                                },
+                                payment_method: {}
+                            };
+                            // Check for PayPal details and set payment method accordingly
+                            if (capture_response.payment_source.paypal) {
+                                sanitized_paypal_capture_response.payment_method.type = "paypal";
+                                sanitized_paypal_capture_response.payment_method.details = {
+                                    email: capture_response.payment_source.paypal.email_address
+                                };
+                            }
+                            // Check for Venmo details and set payment method accordingly
+                            if (capture_response.payment_source.venmo) {
+                                sanitized_paypal_capture_response.payment_method.type = "venmo";
+                                sanitized_paypal_capture_response.payment_method.details = {
+                                    email: capture_response.payment_source.venmo.email_address
+                                };
+                            }
+                            // Return the sanitized response
+                            return sanitized_paypal_capture_response;
+                        } else {
+                            transaction_detail = { id: item[0].id, status: status };
+                        }
+                    }
+                }
+            }
+            // If no valid status is found, return a 402 status code with the purchase units data
+            return { statusCode: 402, body: transaction_detail };
+        } // If there aren't even purchase units, most likely error has occured
+        else {
+            return { statusCode: 400, body: capture_response };
+        }
     } catch (error) {
         console.error("Error in capture_paypal_order:", error);
         throw error;
@@ -286,25 +339,54 @@ let create_order = async (request_object) => {
         });
         let json_response = await create_order_request.json();
         console.log("Order API Response:", JSON.stringify(json_response, null, 2));
-        //If fastlane order, then this is final response
+        //If fastlane order, then parse final response
         if (payment_source === "card") {
-            // You always want to sanitize API responses. No need to send the full
-            // data dump to the client as to avoid unwanted data exposure
-            let sanitized_card_capture_response = {
-                amount: {
-                    value: json_response.purchase_units[0].payments.captures[0].amount.value,
-                    currency: json_response.purchase_units[0].payments.captures[0].amount.currency_code
-                },
-                payment_method: {
-                    type: "card",
-                    details: {
-                        brand: json_response.payment_source.card.brand,
-                        last_digits: json_response.payment_source.card.last_digits,
-                        name: json_response.payment_source.card.name
+            //We need to first check within the purchase units if this payment was declined or not
+            if (json_response.purchase_units) {
+                let purchase_units = json_response.purchase_units;
+                let transaction_detail = {};
+                // Iterate over each purchase unit "payments" object
+                for (let i = 0; i < purchase_units.length; i++) {
+                    let payments = purchase_units[i].payments;
+                    //The types of payment actions that we are interested in looking at to view their status
+                    let payment_action_types_array = ["captures", "authorizations"];
+                    // Check for either "captures" or "authorizations" in the payments
+                    for (let j = 0; j < payment_action_types_array.length; j++) {
+                        let item_name = payment_action_types_array[j];
+                        let item = payments[item_name];
+            
+                        // If the item exists and has a status of "CREATED" or "CAPTURED" or "COMPLETED"
+                        if (item && item.length > 0) {
+                            let status = item[0].status;
+                            if (status === "CREATED" || status === "CAPTURED" || status === "COMPLETED") {
+                                // Sanitize and return only essential card capture response data
+                                let sanitized_card_capture_response = {
+                                    amount: {
+                                        value: item[0].amount.value,
+                                        currency: item[0].amount.currency_code
+                                    },
+                                    payment_method: {
+                                        type: "card",
+                                        details: {
+                                            brand: json_response.payment_source.card.brand,
+                                            last_digits: json_response.payment_source.card.last_digits,
+                                            name: json_response.payment_source.card.name
+                                        }
+                                    }
+                                };
+                                return sanitized_card_capture_response;
+                            } else {
+                                transaction_detail = { id: item[0].id, status: status };
+                            }
+                        }
                     }
                 }
-            };
-            return sanitized_card_capture_response;
+                // If no valid status is found, return a 402 status code with the purchase units data
+                return { statusCode: 402, body: transaction_detail };
+            } // If there aren't even purchase units, most likely error has occured
+            else {
+                return { statusCode: 400, body: json_response };
+            }
         }
         //Otherwise you have just created an Order and not finalized a payment
         else {

@@ -41,6 +41,7 @@ let server_endpoint = "/.netlify/functions/api/"; // Replace with your own serve
 let single_use_token;
 let fastlane_options_object;
 let payment_source;
+let process_payment_response_json;
 
 // Entry point
 get_auth()
@@ -278,9 +279,9 @@ async function process_payment(object) {
     single_use_token = object.single_use_token;
     payment_source = object.payment_source;
     order_id = object.order_id;
-    console.log("Processing payment, have this profile data avail:", profile_data);
     // Determine the method based on the payment source
     if (payment_source === "card") {
+        console.log("Processing payment, have this profile data avail:", profile_data);
         method = "card_order";
         console.log(`Processing payment with single_use_token: ${single_use_token} and payment_source: ${payment_source}`);
     } else {
@@ -302,16 +303,25 @@ async function process_payment(object) {
     try {
         console.log("Sending payment request to the server...");
         // Send the payment request to the server
-        fetch(server_endpoint, payment_fetch_options)
-            .then(response => response.json())
-            .then((process_payment_response) => {
-                ui_display_receipt(process_payment_response);
-            });
+        process_payment_response = await fetch(server_endpoint, payment_fetch_options);
+        //Possible decline
+        if (!process_payment_response.ok) {
+            console.log("API Response:", process_payment_response);
+            throw new Error("HTTP status was > 400, check logs");
+        }
+        //Display receipt
+        process_payment_response_json = await process_payment_response.json();
+        ui_display_receipt(process_payment_response_json);
     } catch (error) {
+        console.error("Error processing payment:", error);
         revert_submit_button_ui();
         // Replace with your own custom UI error handling
         alert("Error processing payment. Please try again.");
-        console.error("Error processing payment:", error);
+        //If this is a card payment and an error was thrown, single-use-tokens cannot be used again.
+        // Therefor, handle this in your own way. For this project we will refresh the page
+        if (payment_source === "card") {
+            location.reload();
+        }
     }    
 }
 // Initializes PayPal buttons and sets up event handlers for order creation and approval.
