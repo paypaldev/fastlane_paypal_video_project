@@ -69,8 +69,7 @@ function init_paypal_script_tag(data) {
     // Setting script tag attributes
     script_tag = document.createElement("script");
     script_tag.src = `https://www.paypal.com/sdk/js?client-id=${client_id}&components=buttons,fastlane&enable-funding=venmo&disable-funding=card,paylater`;
-    script_tag.setAttribute("data-user-id-token", client_token);
-    script_tag.setAttribute("data-client-metadata-id", "testing-sb-fastlane");
+    script_tag.setAttribute("data-sdk-client-token", client_token);
     document.head.appendChild(script_tag);
     script_tag.onload = init_paypal_payment_options;
 }
