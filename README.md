@@ -30,7 +30,7 @@ To get started with this project, follow these steps:
      - Use the same Client ID in your .env file in the script file [script.js line 68](https://github.com/paypaldev/fastlane_paypal_video_project/blob/main/script.js#L68)
 3. Make sure to provide a comma separated list of domain names in the .env file, as well
 4. Update your server-side endpoint URL [script.js line 40](https://github.com/paypaldev/fastlane_paypal_video_project/blob/main/script.js#L40)
-5. Update what buyers will see in their credit/debit card statement for your business name [here](https://github.com/paypaldev/fastlane_paypal_video_project/blob/main/netlify/api.js#L321). Reference docs for [formatting here](https://developer.paypal.com/docs/api/orders/v2/#orders_create!path=purchase_units/soft_descriptor&t=request).
+5. Update what buyers will see in their credit/debit card statement for your business name [here](https://github.com/paypaldev/fastlane_paypal_video_project/blob/main/netlify/functions/api.js#L321). Reference docs for [formatting here](https://developer.paypal.com/docs/api/orders/v2/#orders_create!path=purchase_units/soft_descriptor&t=request).
 6. Note: To use Netlify with this project, you can leave the files as they are. However, if you're not using Netlify, you may need to restructure the directory to ensure that `api.js` is seen as the server endpoint in your Node.js project.
 
 Once you have configured your credentials, you can install the required packages by running `npm i`. To start the app, run `node index`.
